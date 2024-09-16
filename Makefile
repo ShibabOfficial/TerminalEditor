@@ -14,6 +14,8 @@ CFLAGS   := -Wall
 LDFLAGS  := -Llib
 LDLIBS   := -lm
 
+ARGS     := README.md
+
 .PHONY: all clean run
 
 all: clean $(OUT) run
@@ -21,7 +23,7 @@ all: clean $(OUT) run
 run: $(OUT)
 	@echo
 	@echo --OUTPUT--
-	@./$(OUT_DIR)./$(OUT)
+	@./$(OUT_DIR)./$(OUT) $(ARGS)
 
 $(OUT): $(OBJ) | $(BIN_DIR)
 	@echo COMP $^ out: $@
