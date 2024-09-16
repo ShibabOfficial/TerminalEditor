@@ -9,14 +9,7 @@ In your terminal paste this command:
 make
 ```
 And when it compiled then type:
-* its going to work like this *
+*its going to work like this*
 ```zsh
 ./a.out <your_path_to_file_here>
 ```
-#### TODO:
-- [ ] road map?
-- [ ] colors in terminal
-- [ ] loading files
-- [ ] basic loop with input
-- [ ] rendering
-- [ ] a text editor?
