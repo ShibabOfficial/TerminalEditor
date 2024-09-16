@@ -1,13 +1,41 @@
-cc=g++
-cflags=-std=c++11 -Wall -O3
-src=$(shell find src -name '*.cpp')
+SRC_DIR := src/core
+OBJ_DIR := obj
+BIN_DIR := bin
 
-all: compile
+OUT := main.out
+OUT_DIR := $(BIN_DIR)/
 
-.PHONY: clean
+SRC := $(wildcard $(SRC_DIR)/*.cpp)
+OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-compile: $(src)
-	$(cc) $(cflags) $^
+CC       := g++
+CPPFLAGS := -std=c++11 -Isrc/include -MMD -MP
+CFLAGS   := -Wall
+LDFLAGS  := -Llib
+LDLIBS   := -lm
 
-clean: $(shell find src -name '*.h.gch')
-	rm -rf $^
+.PHONY: all clean run
+
+all: clean $(OUT) run
+
+run: $(OUT)
+	@echo
+	@echo --OUTPUT--
+	@./$(OUT_DIR)./$(OUT)
+
+$(OUT): $(OBJ) | $(BIN_DIR)
+	@echo COMP $^ out: $@
+	@$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $(OUT_DIR)$@
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+	@echo LINK $< out: $@
+	@$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+$(BIN_DIR) $(OBJ_DIR):
+	@mkdir -p $@
+
+clean:
+	@$(RM) -rv $(BIN_DIR) $(OBJ_DIR)
+	@echo
+
+-include $(OBJ:.o=.d)
