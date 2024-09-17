@@ -17,7 +17,7 @@ int file::getContents(string& out) {
     string buffer;
 
     if (!inpt.is_open()) { 
-        cerr << "Error opening the file '" + this->path + "'" << endl;
+        cerr << format("Error opening the file '{}'", this->path) << endl;
         return 1; 
     }
 

@@ -13,6 +13,7 @@
 
 using namespace std;
 
+// Note: inline prevens from link errors with headers
 namespace utils {
     inline vector<string> splitString(string s, string delimiter) {
         size_t pos = 0;

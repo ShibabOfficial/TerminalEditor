@@ -39,14 +39,11 @@ int main(int argc, char* argv[]) {
         input::process(window, contents, pressed, xCursor, yCursor);
 
         // Rendering
-
         erase();
         mvaddstr(0, 0, std::format("{}:{}", yCursor, xCursor + 1).c_str());
         mvaddstr(1, 0, contents.c_str());
 
-
         // Cursor
-
         wmove(window, yCursor, xCursor);
         refresh();
     }
