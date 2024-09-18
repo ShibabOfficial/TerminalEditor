@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <filesystem>
 #include <format>
 
 #include "utils/string.h"
@@ -21,7 +22,7 @@ public:
     string ext;
 
     file(char* url);
-    int getContents(string& out);
+    int getContents(vector<string>& out);
 };
 
 #endif

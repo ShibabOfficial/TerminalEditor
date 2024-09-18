@@ -7,7 +7,8 @@
 #include <memory>
 #include <string>
 #include <sstream>
-
+#include <algorithm>
+#include <iterator>
 #include <stdexcept>
 #include <vector>
 
@@ -29,10 +30,17 @@ namespace utils {
         return sf;
     }
 
-    template <typename T> inline string toString(const T& value) {
+    template<typename T> inline string toString(const T& value) {
         ostringstream ss;
         ss << value;
         return ss.str();
+    }
+
+    template<typename T> inline string join(vector<T> lines, const char* delimiter) {
+        std::ostringstream oss;
+        std::copy(lines.begin(), lines.end() - 1, std::ostream_iterator<T>(oss, delimiter));
+        oss << lines.back();
+        return oss.str();
     }
 }
 

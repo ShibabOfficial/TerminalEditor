@@ -11,53 +11,68 @@
 
 using namespace std;
 
-bool moveDown(vector<string> lines, int& x, int& y) {
-    if (y + 1 > lines.size()) return true;
-    y++;
-    return false;
+int lastX = 0;
+
+bool moveUp(int& x, int& y) {
+    if (y - 1 < 0) return false;
+    y--;
+    return true;
 }
 
-bool moveUp(vector<string> lines, int& x, int& y) {
-    if (y - 1 <= 0) return true;
-    y--;
-    return false;
+bool moveDown(vector<string> lines, int& x, int& y) {
+    if (y + 1 > lines.size()) return false;
+    y++;
+    return true;
 }
 
 void moveX(vector<string> lines, int& x, int& y) {
-    if (x > lines.at(y - 1).size()) {
-        x = lines.at(y - 1).size();
+    if (x > lines.at(y).size() || lines.at(y).size() < lastX) {
+        x = lines.at(y).size();
+        return;
+    }
+    
+    if (lines.at(y).size() > lastX) {
+        x = lastX;
     }
 }
 
 namespace input {
-    char process(WINDOW* window, string text, int pressed, int& x, int&y) {
-        vector<string> lines = utils::splitString(text, "\n");
-
+    char process(WINDOW* window, vector<string> lines, int pressed, int& x, int&y) {
         switch (pressed) {
         // Cursor stuff
         case KEY_DOWN:
-            if (moveDown(lines, x, y)) break;
+            moveDown(lines, x, y);
             moveX(lines, x, y);
             break;
         case KEY_UP:
-            if (moveUp(lines, x, y)) break;
+            moveUp(x, y);
             moveX(lines, x, y);
             break;
         case KEY_LEFT:
-            if (x - 1 < 0) {
-                if (moveUp(lines, x, y)) break;
-                x = lines.at(y - 1).size();
-                break;
-            };
-            x--;
-            break;
-        case KEY_RIGHT:
-            if (x + 1 > lines.at(y - 1).size()) {
-                if (moveDown(lines, x, y)) break;
-                x = 0;
+            if (x - 1 >= 0) {
+                x--;
+                lastX = x;
                 break;
             }
-            x++;
+
+            if (!moveUp(x, y)) {
+                break;
+            }
+            x = lines.at(y).size();
+            lastX = x;
+            break;
+        case KEY_RIGHT:
+            if (x < lines.at(y).size()) {
+                x++;
+                lastX = x;
+                break;
+            }
+
+            if (!moveDown(lines, x, y)) {
+                break;
+            }
+            x = 0;
+            lastX = x;
             break;
 
         // Special keys

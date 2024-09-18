@@ -11,23 +11,14 @@ file::file(char* url) {
     this->ext = fname.at(fname.size() - 1);
 }
 
-int file::getContents(string& out) {
-    ifstream inpt(this->path);
+int file::getContents(vector<string>& out) {
+    std::ifstream f(this->path, std::ios::in | std::ios::binary);
+    const auto sz = filesystem::file_size(this->path);
 
-    string buffer;
+    string result(sz, '\0');
+    f.read(result.data(), sz);
 
-    if (!inpt.is_open()) { 
-        cerr << format("Error opening the file '{}'", this->path) << endl;
-        return 1; 
-    }
-
-    while(getline(inpt, buffer)) {
-        out += buffer + "\n";
-    }
-
-    out.erase(out.length() - 1, out.length());
-
-    inpt.close();
+    out = utils::splitString(result, "\n");
 
     return 0;
 }
