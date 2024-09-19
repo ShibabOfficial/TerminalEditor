@@ -6,84 +6,37 @@
 #include <iostream>
 #include <vector>
 #include <ncurses.h>
+#include <string>
 
 #include "utils/string.h"
+#include "file.h"
 
 using namespace std;
 
-int lastX = 0;
+namespace editor {
+    class input {
+    private:
+        WINDOW* _window;
 
-bool moveUp(int& x, int& y) {
-    if (y - 1 < 0) return false;
-    y--;
-    return true;
-}
+        file* _file;
 
-bool moveDown(vector<string> lines, int& x, int& y) {
-    if (y + 1 > lines.size()) return false;
-    y++;
-    return true;
-}
+        int x;
+        int y;
+        int lastX = 0;
 
-void moveX(vector<string> lines, int& x, int& y) {
-    if (x > lines.at(y).size() || lines.at(y).size() < lastX) {
-        x = lines.at(y).size();
-        return;
-    }
-    
-    if (lines.at(y).size() > lastX) {
-        x = lastX;
-    }
-}
+        bool moveUp();
+        bool moveDown();
+        void moveX();
+    public:
+        input(file* file, WINDOW* window, int startX, int startY);
 
-namespace input {
-    char process(WINDOW* window, vector<string> lines, int pressed, int& x, int&y) {
-        switch (pressed) {
-        // Cursor stuff
-        case KEY_DOWN:
-            moveDown(lines, x, y);
-            moveX(lines, x, y);
-            break;
-        case KEY_UP:
-            moveUp(x, y);
-            moveX(lines, x, y);
-            break;
-        case KEY_LEFT:
-            if (x - 1 >= 0) {
-                x--;
-                lastX = x;
-                break;
-            }
+        void process(bool isPressed, int pressed);
+        
+        int getCursorX();
+        int getCursorY();
 
-            if (!moveUp(x, y)) {
-                break;
-            }
-            x = lines.at(y).size();
-            lastX = x;
-            break;
-        case KEY_RIGHT:
-            if (x < lines.at(y).size()) {
-                x++;
-                lastX = x;
-                break;
-            }
-
-            if (!moveDown(lines, x, y)) {
-                break;
-            }
-            x = 0;
-            lastX = x;
-            break;
-
-        // Special keys
-
-        // Normal
-        default:
-            return pressed;
-        }
-
-        return '\0';
-    }
+        bool kbhit();
+    };
 }
 
 #endif

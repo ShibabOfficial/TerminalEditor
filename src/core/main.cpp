@@ -14,10 +14,8 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    file f = file(argv[1]);
-
-    vector<string> lines;
-    int errcode = f.getContents(lines);
+    file* f = new file(argv[1]);
+    int errcode = f->read();
 
     if (errcode) {
         cout << "Error " << errcode << " occured" << endl;
@@ -27,32 +25,34 @@ int main(int argc, char* argv[]) {
     WINDOW* window = initscr();
     keypad(window, true);
     nodelay(window, true);
-    // noecho();
+    scrollok(window, false);
+    noecho();
 
-    // colors
-    start_color();
-    utils::colorRGB(10, 41, 41, 41); // Dark gray
-    utils::colorRGB(11, 49, 53, 61); // Gray
-    utils::colorRGB(12, 140, 140, 140); // Light gray
-    utils::colorRGB(13, 217, 217, 217); // White
-    utils::colorRGB(14, 41, 98, 255); // Deep Blue
-    utils::colorRGB(15, 0, 146, 178); // Aqua
-    utils::colorRGB(15, 146, 80, 188); // Light purple
-    utils::colorRGB(15, 156, 39, 176); // Purple
+    // Colors
+    utils::colors::init();
 
-    init_pair(1, 13, 11);
-    init_pair(2, 13, 14);
-    init_pair(3, 13, 10);
+    init_pair(1, utils::colors::WHITE, utils::colors::GRAY);
+    init_pair(2, utils::colors::WHITE, utils::colors::DEEP_BLUE);
+    init_pair(3, utils::colors::WHITE, utils::colors::DARK_GRAY);
 
     bool running = true;
 
-    int xCursor = 0;
-    int yCursor = 0;
+    editor::input input = editor::input(f, window, 0, 0);
 
     while (running) {
+        bool isPressed = input.kbhit();
         int pressed = wgetch(window);
 
-        input::process(window, lines, pressed, xCursor, yCursor);
+        // Process the input
+        input.process(isPressed, pressed);
+
+
+        // Cursor position and "actual" cursor position
+        int xCur = input.getCursorX();
+        int xActCur = xCur + 1;
+
+        int yCur = input.getCursorY();
+        int yActCur = yCur + 1;
 
         // Rendering
         erase();
@@ -60,8 +60,8 @@ int main(int argc, char* argv[]) {
         // Top bar
         {
             string bar = std::format("{}", string(getmaxx(window), ' '));
-            string cursor = std::format(" {}:{} ", yCursor + 1, xCursor + 1);
-            string file = std::format(" {}.{} ", f.name, f.ext);
+            string cursor = std::format(" {}:{} ", yActCur, xActCur);
+            string file = std::format(" {} ", f->fullname);
 
             attron(COLOR_PAIR(1));
             mvaddstr(0, 0, bar.c_str());
@@ -73,25 +73,29 @@ int main(int argc, char* argv[]) {
             attroff(COLOR_PAIR(2));
         }
 
-        // Lines
-        int maxMargin = utils::toString(lines.size()).size();
+        // Text editing
         {
-            for (int i = 0; i < lines.size(); i++) {
-                attron(COLOR_PAIR(3));
-                string num = utils::toString(i + 1);
-                string ln = std::format("{}{} ", string(maxMargin + 1 - num.size(), ' '), num);
+            int maxMargin = utils::toString(f->contents.size()).size();
+            int afterMargin = maxMargin + 2;
 
-                mvaddstr(i + 1, 0, ln.c_str());
+            for (int i = 0; i < f->contents.size(); i++) {
+                int j = i + 1;
+
+                attron(COLOR_PAIR(3));
+                string spaces = string(maxMargin + 1 - utils::toString(j).size(), ' ');
+                string ln = std::format("{}{} ", spaces, j);
+
+                mvaddstr(j, 0, ln.c_str());
                 attroff(COLOR_PAIR(3));
 
                 use_default_colors();
-                string line = std::format(" {}", lines.at(i).c_str());
-                mvaddstr(i + 1, maxMargin + 2, line.c_str());
+                string line = std::format(" {}", f->contents.at(i).c_str());
+                mvaddstr(j, afterMargin, line.c_str());
             }
+
+            wmove(window, yActCur, xActCur + afterMargin);
         }
 
-        // Cursor
-        wmove(window, yCursor + 1, xCursor + maxMargin + 3);
         refresh();
     }
     

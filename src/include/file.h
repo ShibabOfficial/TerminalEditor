@@ -20,9 +20,12 @@ public:
     string fullname;
     string name;
     string ext;
+    vector<string> contents;
 
+    file();
     file(char* url);
-    int getContents(vector<string>& out);
+
+    int read();
 };
 
 #endif
