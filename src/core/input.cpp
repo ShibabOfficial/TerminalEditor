@@ -13,12 +13,14 @@ bool editor::input::kbhit() {
 
 bool editor::input::moveUp() {
     if (y - 1 < 0) return false;
+    if (page > 0) page--;
     y--;
     return true;
 }
 
 bool editor::input::moveDown() {
     if (y + 2 > _file->contents.size()) return false;
+    if (y > getmaxy(_window) - 3) page++;
     y++;
     return true;
 }
@@ -97,7 +99,7 @@ void editor::input::process(bool isPressed, int pressed) {
             }
 
             _file->contents.erase(_file->contents.begin() + y - 1, _file->contents.begin() + y);
-            y--;
+            moveUp();
             break;
         }
 
@@ -117,7 +119,11 @@ void editor::input::process(bool isPressed, int pressed) {
             _file->contents.insert(_file->contents.begin() + y, "");
         }
 
-        y++;
+        moveDown();
+        break;
+
+    case KEY_COMMAND:
+    case KEY_OPTIONS:
         break;
 
     // Normal
@@ -134,6 +140,18 @@ int editor::input::getCursorX() {
     return x;
 }
 
+int editor::input::getActualCursorX() {
+    return clamp(x + 1, 1, getmaxx(_window) - 1);
+}
+
 int editor::input::getCursorY() {
     return y;
+}
+
+int editor::input::getActualCursorY() {
+    return clamp(y + 1, 1, getmaxy(_window) - 1);
+}
+
+int editor::input::getPage() {
+    return page;
 }

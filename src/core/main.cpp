@@ -22,6 +22,8 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    cout << "\033]0;" << f->fullname << "\007";
+
     WINDOW* window = initscr();
     keypad(window, true);
     nodelay(window, true);
@@ -37,6 +39,8 @@ int main(int argc, char* argv[]) {
 
     bool running = true;
 
+    int page = 0;
+
     editor::input input = editor::input(f, window, 0, 0);
 
     while (running) {
@@ -46,13 +50,12 @@ int main(int argc, char* argv[]) {
         // Process the input
         input.process(isPressed, pressed);
 
-
         // Cursor position and "actual" cursor position
-        int xCur = input.getCursorX();
-        int xActCur = xCur + 1;
+        // int xCur = input.getCursorX();
+        int xActCur = input.getActualCursorX();
 
-        int yCur = input.getCursorY();
-        int yActCur = yCur + 1;
+        // int yCur = input.getCursorY();
+        int yActCur = input.getActualCursorY();
 
         // Rendering
         erase();
@@ -78,19 +81,21 @@ int main(int argc, char* argv[]) {
             int maxMargin = utils::toString(f->contents.size()).size();
             int afterMargin = maxMargin + 2;
 
-            for (int i = 0; i < f->contents.size(); i++) {
+            int page = input.getPage();
+
+            for (int i = page; i < f->contents.size(); i++) {
                 int j = i + 1;
 
                 attron(COLOR_PAIR(3));
                 string spaces = string(maxMargin + 1 - utils::toString(j).size(), ' ');
                 string ln = std::format("{}{} ", spaces, j);
 
-                mvaddstr(j, 0, ln.c_str());
+                mvaddstr(j - page, 0, ln.c_str());
                 attroff(COLOR_PAIR(3));
 
                 use_default_colors();
                 string line = std::format(" {}", f->contents.at(i).c_str());
-                mvaddstr(j, afterMargin, line.c_str());
+                mvaddstr(j - page, afterMargin, line.c_str());
             }
 
             wmove(window, yActCur, xActCur + afterMargin);

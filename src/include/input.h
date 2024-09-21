@@ -23,6 +23,7 @@ namespace editor {
         int x;
         int y;
         int lastX = 0;
+        int page = 0;
 
         bool moveUp();
         bool moveDown();
@@ -33,7 +34,11 @@ namespace editor {
         void process(bool isPressed, int pressed);
         
         int getCursorX();
+        int getActualCursorX();
         int getCursorY();
+        int getActualCursorY();
+
+        int getPage();
 
         bool kbhit();
     };
