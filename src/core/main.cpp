@@ -51,10 +51,10 @@ int main(int argc, char* argv[]) {
         input.process(isPressed, pressed);
 
         // Cursor position and "actual" cursor position
-        // int xCur = input.getCursorX();
+        int xCur = input.getCursorX();
         int xActCur = input.getActualCursorX();
 
-        // int yCur = input.getCursorY();
+        int yCur = input.getCursorY();
         int yActCur = input.getActualCursorY();
 
         // Rendering
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
         // Top bar
         {
             string bar = std::format("{}", string(getmaxx(window), ' '));
-            string cursor = std::format(" {}:{} ", yActCur, xActCur);
+            string cursor = std::format(" {}:{} ", yCur + 1, xCur + 1);
             string file = std::format(" {} ", f->fullname);
 
             attron(COLOR_PAIR(1));
