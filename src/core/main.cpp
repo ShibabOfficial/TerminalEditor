@@ -135,11 +135,11 @@ int main(int argc, char* argv[]) {
                 if (input.isCommandReturned()) {
                     editor::commandHandler::execute(input.getCommand(), &input, running);
                     input.clearCommand(); // also resets cursor X
-                    return;
+                } else {
+                    // Cursor X
+                    xC = 2 + input.getCommandX();
                 }
 
-                // Cursor X
-                xC = 2 + input.getCommandX();
             }
 
             if (mode == editor::EDITING) {
