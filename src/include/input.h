@@ -14,21 +14,33 @@
 using namespace std;
 
 namespace editor {
+    enum mode {
+        EDITING = 0,
+        READONLY = 1,
+        COMMAND = 2,
+    };
+
     class input {
     private:
         WINDOW* _window;
 
         file* _file;
 
-        int x;
-        int relX;
-        int y;
-        int relY;
+        mode editorMode = editor::COMMAND;
+
+        bool commandReturned = false;
+        string commandInput = "";
+        int commandX = 0;
+
+        int x = 0;
+        int relX = 0;
+        int y = 0;
+        int relY = 0;
 
         int lastX = 0;
 
-        int pageY;
-        int pageX;
+        int pageY = 0;
+        int pageX = 0;
 
         bool moveUp();
         bool moveDown();
@@ -45,6 +57,14 @@ namespace editor {
 
         int getPageX();
         int getPageY();
+
+        void setMode(mode sMode);
+        mode getMode();
+
+        bool isCommandReturned();
+        void clearCommand();
+        vector<string> getCommand();
+        int getCommandX();
 
         bool kbhit();
     };

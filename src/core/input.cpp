@@ -13,16 +13,20 @@ bool editor::input::kbhit() {
 
 bool editor::input::moveUp() {
     if (y - 1 < 0) return false;
+
     if (relY - 1 >= 0) relY--;
     else if (relY - 2 < 0 && pageY > 0) pageY--;
+
     y--;
     return true;
 }
 
 bool editor::input::moveDown() {
     if (y + 2 > _file->contents.size()) return false;
+
     if (relY + 1 < getmaxy(_window) - 1) relY++;
     else pageY++;
+
     y++;
     return true;
 }
@@ -50,39 +54,47 @@ void editor::input::process(bool isPressed, int pressed) {
     switch (pressed) {
     // Cursor stuff
     case KEY_DOWN:
+        if (editorMode == COMMAND) break;
+
         if (!moveDown()) break;
+
         moveX();
         break;
     case KEY_UP:
+        if (editorMode == COMMAND) break;
+
         if (!moveUp()) break;
+
         moveX();
         break;
     case KEY_LEFT:
+        if (editorMode == COMMAND) {
+            commandX--;
+            break;
+        }
+
         if (x - 1 >= 0) {
             x--;
-            lastX = x;
-            break;
+        } else {
+            if (!moveUp()) break;
+            x = _file->contents.at(y).size();
         }
 
-        if (!moveUp()) {
-            break;
-        }
-
-        x = _file->contents.at(y).size();
         lastX = x;
         break;
     case KEY_RIGHT:
+        if (editorMode == COMMAND) {
+            commandX++;
+            break;
+        }
+
         if (x < _file->contents.at(y).size()) {
             x++;
-            lastX = x;
-            break;
+        } else {
+            if (!moveDown()) break;
+            x = 0;
         }
 
-        if (!moveDown()) {
-            break;
-        }
-
-        x = 0;
         lastX = x;
         break;
 
@@ -92,6 +104,15 @@ void editor::input::process(bool isPressed, int pressed) {
     case '\b':
     case 127:
     case KEY_BACKSPACE:
+        if (editorMode == READONLY) break;
+        if (editorMode == COMMAND) {
+            if (commandX - 1 < 0) break;
+
+            commandInput.erase(commandInput.begin() + commandX - 1, commandInput.begin() + commandX);
+            commandX--;
+            break;
+        }
+
         if (x - 1 < 0) {
             if (y - 1 < 0) break;
 
@@ -111,6 +132,12 @@ void editor::input::process(bool isPressed, int pressed) {
     
     case '\n':
     case KEY_ENTER:
+        if (editorMode == READONLY) break;
+        if (editorMode == COMMAND) {
+            commandReturned = true;
+            break;
+        }
+
         if (x > 0) {
             string nl = _file->contents.at(y);
             nl.erase(nl.begin(), nl.begin() + x);
@@ -123,6 +150,14 @@ void editor::input::process(bool isPressed, int pressed) {
 
         moveDown();
         break;
+    
+    // Insert
+    case 330:
+    case KEY_IC:
+        if (editorMode == COMMAND) break;
+
+        editorMode = COMMAND;
+        break;
 
     case KEY_COMMAND:
     case KEY_OPTIONS:
@@ -132,7 +167,15 @@ void editor::input::process(bool isPressed, int pressed) {
     default:
         if (!isPressed) break;
 
-        _file->contents.at(y).insert(x, utils::toString((char)pressed));
+        string ch = utils::toString((char)pressed);
+
+        if (editorMode == COMMAND) {
+            commandInput.insert(commandX, ch);
+            commandX++;
+            break;
+        }
+
+        _file->contents.at(y).insert(x, ch);
         x++;
         break;
     }
@@ -160,4 +203,30 @@ int editor::input::getPageX() {
 
 int editor::input::getPageY() {
     return pageY;
+}
+
+void editor::input::setMode(mode sMode) {
+    editorMode = sMode;
+}
+
+editor::mode editor::input::getMode() {
+    return editorMode;
+}
+
+bool editor::input::isCommandReturned() {
+    return commandReturned;
+}
+
+void editor::input::clearCommand() {
+    commandReturned = false;
+    commandInput = "";
+    commandX = 0;
+}
+
+vector<string> editor::input::getCommand() {
+    return utils::splitString(commandInput, " ");
+}
+
+int editor::input::getCommandX() {
+    return commandX;
 }

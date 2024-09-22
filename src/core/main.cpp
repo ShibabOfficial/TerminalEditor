@@ -5,6 +5,7 @@
 #include "file.h"
 #include "input.h"
 #include "utils/color.h"
+#include "commands.h"
 
 using namespace std;
 
@@ -39,8 +40,6 @@ int main(int argc, char* argv[]) {
 
     bool running = true;
 
-    int page = 0;
-
     editor::input input = editor::input(f, window, 0, 0);
 
     while (running) {
@@ -50,12 +49,9 @@ int main(int argc, char* argv[]) {
         // Process the input
         input.process(isPressed, pressed);
 
-        // Cursor position and "actual" cursor position
+        // Cursor position
         int xCur = input.getCursorX();
-        int xActCur = input.getRelativeCursorX();
-
         int yCur = input.getCursorY();
-        int yActCur = input.getRelativeCursorY();
 
         // Rendering
         erase();
@@ -76,12 +72,17 @@ int main(int argc, char* argv[]) {
             attroff(COLOR_PAIR(2));
         }
 
-        // Text editing
+        // Editor
         {
             int maxMargin = utils::toString(f->contents.size()).size();
             int afterMargin = maxMargin + 2;
 
             int page = input.getPageY();
+
+            int xC = 0;
+            int yC = 0;
+
+            editor::mode mode = input.getMode();
 
             for (int i = page; i < f->contents.size(); i++) {
                 int j = i + 1;
@@ -98,7 +99,29 @@ int main(int argc, char* argv[]) {
                 mvaddstr(j - page, afterMargin, line.c_str());
             }
 
-            wmove(window, yActCur + 1, xActCur + afterMargin + 1);
+            if (mode == editor::COMMAND) {
+                attron(COLOR_PAIR(3));
+                mvaddstr(getmaxy(window) - 1, 0, std::format("> {}", string(getmaxx(window) - 2, ' ')).c_str());
+                mvaddstr(getmaxy(window) - 1, 2, utils::join(input.getCommand(), " ").c_str());
+                attroff(COLOR_PAIR(3));
+
+                xC = 2 + input.getCommandX();
+                yC = getmaxy(window) - 1;
+
+                if (input.isCommandReturned()) {
+                    editor::commandHandler::execute(input.getCommand(), &input, running);
+                    input.clearCommand();
+                }
+            }
+
+            if (mode == editor::EDITING) {
+                yC = input.getRelativeCursorY() + 1;
+                xC = input.getRelativeCursorX() + afterMargin + 1;
+            }
+
+            use_default_colors();
+
+            wmove(window, yC, xC);
         }
 
         refresh();
