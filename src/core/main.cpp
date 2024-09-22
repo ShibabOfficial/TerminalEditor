@@ -1,6 +1,8 @@
 #include <iostream>
 #include <format>
 #include <ncurses.h>
+#include <ctime>
+#include <string>
 
 #include "fs/file.h"
 #include "fs/fileHandler.h"
@@ -9,6 +11,21 @@
 #include "commands.h"
 
 using namespace std;
+
+// Detect current os
+#if defined(__linux__)
+    string OS = "Linux";
+#elif __FreeBSD__
+    string OS = "FreeBSD";
+#elif __ANDROID__
+    string os = "Android";
+#elif __APPLE__
+    string OS = "Mac";
+#elif _WIN32
+    string OS = "Win";
+#else
+    string OS = "unknown";
+#endif
 
 int main(int argc, char* argv[]) {
     const char* path = "";
@@ -30,11 +47,14 @@ int main(int argc, char* argv[]) {
     // Colors
     utils::colors::init();
 
-    init_pair(1, utils::colors::WHITE, utils::colors::GRAY);
-    init_pair(2, utils::colors::WHITE, utils::colors::DEEP_BLUE);
-    init_pair(3, utils::colors::WHITE, utils::colors::DARK_GRAY);
+    init_pair(1, utils::colors::WHITE, utils::colors::GRAY); // Top bar
+    init_pair(2, utils::colors::WHITE, utils::colors::DEEP_BLUE); // Cursor pos
+    init_pair(3, utils::colors::WHITE, utils::colors::DARK_GRAY); // Line
+    init_pair(4, utils::colors::WHITE, utils::colors::MID_GRAY); // Line Highlight
 
     bool running = true;
+
+    // time_t start = time(nullptr);
 
     // Initializing input
     editor::input input = editor::input(window, 0, 0);
@@ -45,6 +65,7 @@ int main(int argc, char* argv[]) {
 
     while (running) {
         file* file = fileHandler::getFile();
+        time_t now = time(nullptr);
         
         bool isPressed = input.kbhit();
         int pressed = wgetch(window);
@@ -64,18 +85,30 @@ int main(int argc, char* argv[]) {
             string bar = std::format("{}", string(getmaxx(window), ' '));
 
             // Bar components
-            string cursor = std::format(" {}:{} ", yCur + 1, xCur + 1);
+            string cursor = std::format(" Ln:{},Col:{} ", yCur + 1, xCur + 1);
             string fileName = std::format(" {} ", file->fullname);
+            
+            // OS
+            string os = std::format(" {} ", OS);
+
+            // Time
+            char buffer[9];
+            strftime(buffer, 9, "%H:%M:%S", localtime(&now));
+            string fTime = std::format(" {}", buffer);
+
+            // Time spent
 
             // No background
             attron(COLOR_PAIR(1));
             mvaddstr(0, 0, bar.c_str());
-            mvaddstr(0, cursor.size(), fileName.c_str());
+            mvaddstr(0, 0, fileName.c_str());
+            mvaddstr(0, getmaxx(window) - cursor.size() - os.size(), os.c_str());
+            mvaddstr(0, getmaxx(window) - cursor.size() - fTime.size() - os.size(), fTime.c_str());
             attroff(COLOR_PAIR(1));
 
             // With background
             attron(COLOR_PAIR(2));
-            mvaddstr(0, 0, cursor.c_str());
+            mvaddstr(0, getmaxx(window) - cursor.size(), cursor.c_str());
             attroff(COLOR_PAIR(2));
         }
 
@@ -105,9 +138,15 @@ int main(int argc, char* argv[]) {
 
                 // Printing line
 
-                attron(COLOR_PAIR(3));
-                mvaddstr(j - page, 0, ln.c_str());
-                attroff(COLOR_PAIR(3));
+                if (i == yCur) {
+                    attron(COLOR_PAIR(4));
+                    mvaddstr(j - page, 0, ln.c_str());
+                    attroff(COLOR_PAIR(4));
+                } else {
+                    attron(COLOR_PAIR(3));
+                    mvaddstr(j - page, 0, ln.c_str());
+                    attroff(COLOR_PAIR(3));
+                }
 
                 use_default_colors();
                 mvaddstr(j - page, maxMargin + 2, line.c_str());
