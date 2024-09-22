@@ -75,7 +75,6 @@ int main(int argc, char* argv[]) {
         // Editor
         {
             int maxMargin = utils::toString(f->contents.size()).size();
-            int afterMargin = maxMargin + 2;
 
             int page = input.getPageY();
 
@@ -96,7 +95,7 @@ int main(int argc, char* argv[]) {
 
                 use_default_colors();
                 string line = std::format(" {}", f->contents.at(i).c_str());
-                mvaddstr(j - page, afterMargin, line.c_str());
+                mvaddstr(j - page, maxMargin + 2, line.c_str());
             }
 
             if (mode == editor::COMMAND) {
@@ -116,7 +115,7 @@ int main(int argc, char* argv[]) {
 
             if (mode == editor::EDITING) {
                 yC = input.getRelativeCursorY() + 1;
-                xC = input.getRelativeCursorX() + afterMargin + 1;
+                xC = input.getRelativeCursorX() + maxMargin + 3;
             }
 
             use_default_colors();

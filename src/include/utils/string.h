@@ -20,11 +20,15 @@ namespace utils {
         size_t pos = 0;
         vector<string> sf;
 
+        // While we can still find the delimiter we split
         while ((pos = s.find(delimiter)) != string::npos) {
+            // Split
             sf.push_back(s.substr(0, pos));
+            // Remove the split string
             s.erase(0, pos + delimiter.length());
         }
 
+        // Add the rest
         sf.push_back(s);
 
         return sf;
