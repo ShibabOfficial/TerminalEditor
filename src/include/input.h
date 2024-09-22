@@ -21,9 +21,14 @@ namespace editor {
         file* _file;
 
         int x;
+        int relX;
         int y;
+        int relY;
+
         int lastX = 0;
-        int page = 0;
+
+        int pageY;
+        int pageX;
 
         bool moveUp();
         bool moveDown();
@@ -34,11 +39,12 @@ namespace editor {
         void process(bool isPressed, int pressed);
         
         int getCursorX();
-        int getActualCursorX();
+        int getRelativeCursorX();
         int getCursorY();
-        int getActualCursorY();
+        int getRelativeCursorY();
 
-        int getPage();
+        int getPageX();
+        int getPageY();
 
         bool kbhit();
     };

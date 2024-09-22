@@ -13,14 +13,16 @@ bool editor::input::kbhit() {
 
 bool editor::input::moveUp() {
     if (y - 1 < 0) return false;
-    if (page > 0) page--;
+    if (relY - 1 >= 0) relY--;
+    else if (relY - 2 < 0 && pageY > 0) pageY--;
     y--;
     return true;
 }
 
 bool editor::input::moveDown() {
     if (y + 2 > _file->contents.size()) return false;
-    if (y > getmaxy(_window) - 3) page++;
+    if (relY + 1 < getmaxy(_window) - 1) relY++;
+    else pageY++;
     y++;
     return true;
 }
@@ -140,18 +142,22 @@ int editor::input::getCursorX() {
     return x;
 }
 
-int editor::input::getActualCursorX() {
-    return clamp(x + 1, 1, getmaxx(_window) - 1);
+int editor::input::getRelativeCursorX() {
+    return relX;
 }
 
 int editor::input::getCursorY() {
     return y;
 }
 
-int editor::input::getActualCursorY() {
-    return clamp(y + 1, 1, getmaxy(_window) - 1);
+int editor::input::getRelativeCursorY() {
+    return relY;
 }
 
-int editor::input::getPage() {
-    return page;
+int editor::input::getPageX() {
+    return pageX;
+}
+
+int editor::input::getPageY() {
+    return pageY;
 }

@@ -52,10 +52,10 @@ int main(int argc, char* argv[]) {
 
         // Cursor position and "actual" cursor position
         int xCur = input.getCursorX();
-        int xActCur = input.getActualCursorX();
+        int xActCur = input.getRelativeCursorX();
 
         int yCur = input.getCursorY();
-        int yActCur = input.getActualCursorY();
+        int yActCur = input.getRelativeCursorY();
 
         // Rendering
         erase();
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
             int maxMargin = utils::toString(f->contents.size()).size();
             int afterMargin = maxMargin + 2;
 
-            int page = input.getPage();
+            int page = input.getPageY();
 
             for (int i = page; i < f->contents.size(); i++) {
                 int j = i + 1;
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
                 mvaddstr(j - page, afterMargin, line.c_str());
             }
 
-            wmove(window, yActCur, xActCur + afterMargin);
+            wmove(window, yActCur + 1, xActCur + afterMargin + 1);
         }
 
         refresh();
