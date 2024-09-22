@@ -25,9 +25,9 @@ bool editor::input::moveUp() {
     return true;
 }
 
-bool editor::input::moveDown() {
+bool editor::input::moveDown(int linesCount) {
     // Max height
-    if (y + 2 > _file->contents.size()) return false;
+    if (y + 2 > linesCount) return false;
 
     // Max relative height
     if (relY + 1 < getmaxy(_window) - 1) relY++;
@@ -37,46 +37,49 @@ bool editor::input::moveDown() {
     return true;
 }
 
-void editor::input::moveX() {
+void editor::input::moveX(int lineSize) {
     // If the line is smaller then current x or smaller or equal we move to the end of the line
-    if (x > _file->contents.at(y).size() || _file->contents.at(y).size() <= lastX) {
-        x = _file->contents.at(y).size();
+    if (x > lineSize || lineSize <= lastX) {
+        x = lineSize;
+        relX = lineSize;
         return;
     }
     
     // If the line is larger then the last x we move to the lastX
-    if (_file->contents.at(y).size() > lastX) {
+    if (lineSize > lastX) {
         x = lastX;
+        relX = lastX;
     }
 }
 
-editor::input::input(file* file, WINDOW* window, int startX, int startY) {
+editor::input::input(WINDOW* window, int startX, int startY) {
     this->_window = window;
-    this->_file = file;
 
     this->x = startX;
     this->y = startY;
 }
 
-void editor::input::process(bool isPressed, int pressed) {
+void editor::input::process(file* file, bool isPressed, int pressed) {
     switch (pressed) {
     // Cursor stuff
     case KEY_DOWN:
         if (editorMode == COMMAND) break;
 
-        if (!moveDown()) break;
+        if (!moveDown(file->contents.size())) break;
 
-        moveX();
+        moveX(file->contents.at(y).size());
         break;
     case KEY_UP:
         if (editorMode == COMMAND) break;
 
         if (!moveUp()) break;
 
-        moveX();
+        moveX(file->contents.at(y).size());
         break;
     case KEY_LEFT:
         if (editorMode == COMMAND) {
+            if (commandX - 1 < 0) break;
+            
             commandX--;
             break;
         }
@@ -86,26 +89,30 @@ void editor::input::process(bool isPressed, int pressed) {
             x--;
         } else {
             if (!moveUp()) break; // Moving up
-            x = _file->contents.at(y).size(); // Last x
+            x = file->contents.at(y).size(); // Last x
         }
 
         lastX = x;
+        relX = x;
         break;
     case KEY_RIGHT:
         if (editorMode == COMMAND) {
+            if (commandX + 1 > commandInput.size()) break;
+
             commandX++;
             break;
         }
 
         // If we reached the end of the line we go down or if we didnt go right
-        if (x < _file->contents.at(y).size()) {
+        if (x < file->contents.at(y).size()) {
             x++;
         } else {
-            if (!moveDown()) break;
+            if (!moveDown(file->contents.size())) break;
             x = 0; // Next line x
         }
 
         lastX = x;
+        relX = x;
         break;
 
     // Special keys
@@ -130,20 +137,23 @@ void editor::input::process(bool isPressed, int pressed) {
             if (y - 1 < 0) break;
 
             // If there is something
-            if (_file->contents.at(y - 1).size() > 0) {
-                _file->contents.at(y) = _file->contents.at(y - 1) + _file->contents.at(y);
-                x = _file->contents.at(y - 1).size();
+            if (file->contents.at(y - 1).size() > 0) {
+                file->contents.at(y) = file->contents.at(y - 1) + file->contents.at(y);
+                x = file->contents.at(y - 1).size();
+                relX = x; // Add paging
             }
 
             // Remove the line
-            _file->contents.erase(_file->contents.begin() + y - 1, _file->contents.begin() + y);
+            file->contents.erase(file->contents.begin() + y - 1, file->contents.begin() + y);
             moveUp();
             break;
         }
 
         // Remiove the char before the cursor
-        _file->contents.at(y).erase(_file->contents.at(y).begin() + x - 1, _file->contents.at(y).begin() + x);
+        file->contents.at(y).erase(file->contents.at(y).begin() + x - 1, file->contents.at(y).begin() + x);
         x--;
+
+        relX = x; // Add paging
         break;
     
     case '\n':
@@ -157,19 +167,21 @@ void editor::input::process(bool isPressed, int pressed) {
         // If we are pressing enter in the middle of the line we split it to the new line
         if (x > 0) {
             // Split contents
-            string nl = _file->contents.at(y);
+            string nl = file->contents.at(y);
             nl.erase(nl.begin(), nl.begin() + x);
             // Inserting it to the new line
-            _file->contents.insert(_file->contents.begin() + y + 1, nl);
+            file->contents.insert(file->contents.begin() + y + 1, nl);
             // Removing the old contents from the line above
-            _file->contents.at(y).erase(_file->contents.at(y).begin() + x, _file->contents.at(y).end());
+            file->contents.at(y).erase(file->contents.at(y).begin() + x, file->contents.at(y).end());
             x = 0;
+
+            relX = x; // Add paging
         } else {
             // New line
-            _file->contents.insert(_file->contents.begin() + y, "");
+            file->contents.insert(file->contents.begin() + y, "");
         }
 
-        moveDown();
+        moveDown(file->contents.size());
         break;
     
     // Insert
@@ -198,8 +210,10 @@ void editor::input::process(bool isPressed, int pressed) {
         }
 
         // Add to current line and col in file
-        _file->contents.at(y).insert(x, ch);
+        file->contents.at(y).insert(x, ch);
         x++;
+
+        relX = x; // Add paging
         break;
     }
 }
@@ -226,6 +240,16 @@ int editor::input::getPageX() {
 
 int editor::input::getPageY() {
     return pageY;
+}
+
+void editor::input::resetCursor() {
+    x = 0;
+    relX = 0;
+    y = 0;
+    relY = 0;
+
+    pageY = 0;
+    pageX = 0;
 }
 
 void editor::input::setMode(mode sMode) {

@@ -1,4 +1,4 @@
-#include "file.h"
+#include "fs/file.h"
 
 file::file() {
     this->path = "";
@@ -7,7 +7,7 @@ file::file() {
     this->ext = "";
 }
 
-file::file(char* url) {
+file::file(const char* url) {
     this->path = url;
 
     // Every folder name and the file
@@ -24,6 +24,8 @@ file::file(char* url) {
 }
 
 int file::read() {
+    if (this->path.size() <= 0) return -1;
+
     // Setup file stream with the path
     std::ifstream f(this->path, std::ios::in | std::ios::binary);
     // Size of the file

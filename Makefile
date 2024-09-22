@@ -9,7 +9,7 @@ SRC := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 CC       := g++
-CPPFLAGS := -std=c++20 -Isrc/include -MMD -MP
+CPPFLAGS := -std=c++20 -O2 -Isrc/include -MMD -MP
 CFLAGS   := -Wall
 LDFLAGS  := -Llib -lncurses
 LDLIBS   := -lm

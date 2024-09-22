@@ -9,7 +9,7 @@
 #include <string>
 
 #include "utils/string.h"
-#include "file.h"
+#include "fs/file.h"
 
 using namespace std;
 
@@ -24,9 +24,7 @@ namespace editor {
     private:
         WINDOW* _window;
 
-        file* _file;
-
-        mode editorMode = editor::COMMAND;
+        mode editorMode = editor::EDITING;
 
         bool commandReturned = false;
         string commandInput = "";
@@ -43,12 +41,12 @@ namespace editor {
         int pageX = 0;
 
         bool moveUp();
-        bool moveDown();
-        void moveX();
+        bool moveDown(int linesCount);
+        void moveX(int lineSize);
     public:
-        input(file* file, WINDOW* window, int startX, int startY);
+        input(WINDOW* window, int startX, int startY);
 
-        void process(bool isPressed, int pressed);
+        void process(file* file, bool isPressed, int pressed);
         
         int getCursorX();
         int getRelativeCursorX();
@@ -57,6 +55,8 @@ namespace editor {
 
         int getPageX();
         int getPageY();
+
+        void resetCursor();
 
         void setMode(mode sMode);
         mode getMode();

@@ -2,32 +2,23 @@
 #include <format>
 #include <ncurses.h>
 
-#include "file.h"
-#include "input.h"
+#include "fs/file.h"
+#include "fs/fileHandler.h"
 #include "utils/color.h"
+#include "input.h"
 #include "commands.h"
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    // If we didnt specify the file we quit
-    if (argc <= 1) {
-        cout << "No files specified. Quitting..." << endl;
-        return 0;
+    const char* path = "";
+
+    if (argc > 1) {
+        path = argv[1];
     }
-
-    // Reading the file
-    file* f = new file(argv[1]);
-    int errcode = f->read();
-
-    // If something went wrong
-    if (errcode) {
-        cout << "Error " << errcode << " occured" << endl;
-        return 0;
-    }
-
-    // Set the window name as the file name
-    cout << "\033]0;" << f->fullname << "\007";
+    
+    // Creating a file handle
+    fileHandler::setFile(new file(path));
 
     // Init ncurses
     WINDOW* window = initscr();
@@ -46,14 +37,20 @@ int main(int argc, char* argv[]) {
     bool running = true;
 
     // Initializing input
-    editor::input input = editor::input(f, window, 0, 0);
+    editor::input input = editor::input(window, 0, 0);
+
+    if (fileHandler::getFile()->contents.size() <= 0) {
+        input.setMode(editor::COMMAND);
+    }
 
     while (running) {
+        file* file = fileHandler::getFile();
+        
         bool isPressed = input.kbhit();
         int pressed = wgetch(window);
 
         // Process the input
-        input.process(isPressed, pressed);
+        input.process(file, isPressed, pressed);
 
         // Cursor position
         int xCur = input.getCursorX();
@@ -68,12 +65,12 @@ int main(int argc, char* argv[]) {
 
             // Bar components
             string cursor = std::format(" {}:{} ", yCur + 1, xCur + 1);
-            string file = std::format(" {} ", f->fullname);
+            string fileName = std::format(" {} ", file->fullname);
 
             // No background
             attron(COLOR_PAIR(1));
             mvaddstr(0, 0, bar.c_str());
-            mvaddstr(0, cursor.size(), file.c_str());
+            mvaddstr(0, cursor.size(), fileName.c_str());
             attroff(COLOR_PAIR(1));
 
             // With background
@@ -85,7 +82,7 @@ int main(int argc, char* argv[]) {
         // Editor
         {
             // Max margin for x
-            int maxMargin = utils::toString(f->contents.size()).size();
+            int maxMargin = utils::toString(file->contents.size()).size();
 
             int page = input.getPageY();
 
@@ -95,7 +92,7 @@ int main(int argc, char* argv[]) {
 
             editor::mode mode = input.getMode();
 
-            for (int i = page; i < f->contents.size(); i++) {
+            for (int i = page; i < file->contents.size(); i++) {
                 // Line number
                 int j = i + 1;
 
@@ -104,7 +101,7 @@ int main(int argc, char* argv[]) {
                 string ln = std::format("{}{} ", spaces, j);
 
                 // Text line
-                string line = std::format(" {}", f->contents.at(i).c_str());
+                string line = std::format(" {}", file->contents.at(i).c_str());
 
                 // Printing line
 
@@ -139,7 +136,6 @@ int main(int argc, char* argv[]) {
                     // Cursor X
                     xC = 2 + input.getCommandX();
                 }
-
             }
 
             if (mode == editor::EDITING) {

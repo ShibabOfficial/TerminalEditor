@@ -23,7 +23,7 @@ public:
     vector<string> contents;
 
     file();
-    file(char* url);
+    file(const char* url);
 
     int read();
 };

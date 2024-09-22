@@ -8,6 +8,8 @@
 #include <ncurses.h>
 #include <string>
 
+#include "fs/fileHandler.h"
+#include "fs/file.h"
 #include "utils/string.h"
 #include "input.h"
 
@@ -16,7 +18,7 @@ using namespace std;
 namespace editor {
     class commandHandler {
     public:
-        static void execute(vector<string> command, input *input, bool &running);
+        static void execute(vector<string> command, input* input, bool& running);
     };
 }
 
