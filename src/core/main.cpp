@@ -9,23 +9,9 @@
 #include "utils/color.h"
 #include "input.h"
 #include "commands.h"
+#include "os.h"
 
 using namespace std;
-
-// Detect current os
-#if defined(__linux__)
-    string OS = "Linux";
-#elif __FreeBSD__
-    string OS = "FreeBSD";
-#elif __ANDROID__
-    string os = "Android";
-#elif __APPLE__
-    string OS = "Mac";
-#elif _WIN32
-    string OS = "Win";
-#else
-    string OS = "unknown";
-#endif
 
 int main(int argc, char* argv[]) {
     const char* path = "";
@@ -89,7 +75,7 @@ int main(int argc, char* argv[]) {
             string fileName = std::format(" {} ", file->fullname);
             
             // OS
-            string os = std::format(" {} ", OS);
+            string os = std::format(" {} ", os::getOS());
 
             // Time
             char buffer[9];
